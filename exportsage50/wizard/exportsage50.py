@@ -19,25 +19,18 @@
 #
 ##############################################################################
 
-from osv import osv, fields
-import web
+from openerp.osv import osv, fields
 import base64
-import tools
-from tools.translate import _
-from tools.misc import get_iso_codes
-import pooler
+from openerp.tools.translate import _
 from datetime import datetime
-import decimal_precision as dp
 
-
-class exportsage(osv.osv):
-
+class exportsage(osv.osv_memory):
     """
-    Wizard 
+    Wizard
     """
     _name = "exportsage"
     _description = "Create imp file  to export  in sage50"
-    _inherit = "ir.wizard.screen"
+
     _columns = {
         'data': fields.binary('File', readonly=True),
         'name': fields.char('Filename', 20, readonly=True),
@@ -47,7 +40,7 @@ class exportsage(osv.osv):
         'invoice_ids': fields.many2many('account.invoice', 'sale_order_invoice_export_rel', 'order_id', 'invoice_id',
                                         'Invoices', required=True,
                                         help="This is the list of invoices that have been generated for this sales order. The same sales order may have been invoiced in several times (by line for example)."),
-    }
+        }
 
     _defaults = {
         'state': lambda *a: 'choose',
@@ -72,8 +65,7 @@ class exportsage(osv.osv):
 
         output = '<Version>''\n' + '"12001"' + ',' + '"1"''\n' + '</Version>\n\n'
         #Faire le traitement des autres lignes dans les lignes de factures
-        pool = pooler.get_pool(cr.dbname)
-        line_obj = pool.get('account.invoice')
+        line_obj = self.pool.get('account.invoice')
 
         for line in line_obj.browse(cr, uid, data['invoice_ids'], context):
             # tag de debut pour les lignes de factures
@@ -190,7 +182,5 @@ class exportsage(osv.osv):
         this.name = "%s.%s" % (filename, this.format)
         out = base64.encodestring(output)
         self.write(cr, uid, ids, {'state':'get', 'data':out, 'name':this.name, 'format' : this.format}, context=context)
-        
-exportsage()
 
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
